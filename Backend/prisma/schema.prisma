@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String          @id @default(uuid())
+  name          String
+  email         String          @unique
+  passwordHash  String
+  phone         String?
+  isAdmin       Boolean         @default(false)
+  prompts       Prompt[]
+  refreshTokens RefreshToken[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model Category {
+  id            String         @id @default(uuid())
+  name          String
+  subCategories SubCategory[]
+  prompts       Prompt[]
+}
+
+model SubCategory {
+  id         String     @id @default(uuid())
+  name       String
+  category   Category   @relation(fields: [categoryId], references: [id])
+  categoryId String
+  prompts    Prompt[]
+}
+
+model Prompt {
+  id            String      @id @default(uuid())
+  user          User        @relation(fields: [userId], references: [id])
+  userId        String
+
+  category      Category    @relation(fields: [categoryId], references: [id])
+  categoryId    String
+
+  subCategory   SubCategory @relation(fields: [subCategoryId], references: [id])
+  subCategoryId String
+
+  prompt        String
+  response      String
+  version       Int         @default(1)  // בונוס: ניהול גרסאות
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model RefreshToken {
+  id         String   @id @default(uuid())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String
+  token      String   @unique
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime
+  revoked    Boolean  @default(false)
+}
