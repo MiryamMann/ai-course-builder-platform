@@ -9,8 +9,22 @@ const options: swaggerJsdoc.Options = {
       title: 'AI Learning Platform API',
       version: '1.0.0',
     },
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+      },
+    },
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
   },
-apis: ['./src/**/*.ts'],
+  apis: ['./src/**/*.ts'], // ודאי שכל הקבצים המתועדים נמצאים כאן
 };
 
 const swaggerSpec = swaggerJsdoc(options);

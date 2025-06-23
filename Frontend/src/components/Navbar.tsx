@@ -8,7 +8,7 @@ import { Button } from './ui/button';
 const Navbar = () => {
   const dispatch = useDispatch();
   const { user, isAuthenticated, isAdmin } = useAuth();
-
+console.log('Navbar user:', user);
   const handleLogout = () => {
     dispatch(logout());
   };
@@ -36,7 +36,7 @@ const Navbar = () => {
                   </Link>
                 )}
                 <span className="text-sm text-gray-600">
-                  Welcome, {user?.name}
+                  Welcome {user?.name}
                 </span>
                 <Button onClick={handleLogout} variant="outline">
                   Sign Out

@@ -1,34 +1,72 @@
-import { PrismaClient } from '@prisma/client';
-import OpenAI from 'openai';
-
-const prisma = new PrismaClient();
+import dotenv from 'dotenv';
+import { OpenAI } from 'openai';
+dotenv.config();
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || '',
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
-export async function createPrompt(data: {
-  userId: string;
-  categoryId: string;
-  subCategoryId: string;
-  prompt: string;
-}) {
-  const completion = await openai.chat.completions.create({
-    model: 'gpt-3.5-turbo',
-    messages: [{ role: 'user', content: data.prompt }],
+const prompts: any[] = [];
+
+
+export const createPrompt = async (data: any) => {
+  const { prompt, categoryId, subcategoryId, userId } = data;
+
+  // קריאה ל־OpenAI
+  const gptRes = await openai.chat.completions.create({
+    model: 'gpt-3.5-turbo', // או 'gpt-4'
+    messages: [{ role: 'user', content: prompt }],
   });
 
-  const responseText = completion.choices[0].message.content || '';
+  const responseText = gptRes.choices[0]?.message?.content || 'No response';
 
-  const saved = await prisma.prompt.create({
-    data: {
-      userId: data.userId,
-      categoryId: data.categoryId,
-      subCategoryId: data.subCategoryId,
-      prompt: data.prompt,
-      response: responseText,
-    },
-  });
+  const newPrompt = {
+    id: String(prompts.length + 1),
+    prompt,
+    categoryId,
+    subcategoryId,
+    userId,
+    response: responseText,
+    createdAt: new Date().toISOString(),
+  };
 
-  return saved;
-}
+  prompts.push(newPrompt);
+  return newPrompt;
+};
+
+/**
+ * מחזיר את כל הפרומפטים
+ */
+export const getAllPrompts = async () => prompts;
+
+/**
+ * לפי ID
+ */
+export const getPromptById = async (id: string) =>
+  prompts.find((p) => p.id === id);
+
+/**
+ * מחיקת פרומפט
+ */
+export const deletePrompt = async (id: string) => {
+  const idx = prompts.findIndex((p) => p.id === id);
+  if (idx === -1) return false;
+  prompts.splice(idx, 1);
+  return true;
+};
+
+/**
+ * עדכון פרומפט קיים
+ */
+export const updatePrompt = async (id: string, data: any) => {
+  const idx = prompts.findIndex((p) => p.id === id);
+  if (idx === -1) return null;
+  prompts[idx] = { ...prompts[idx], ...data };
+  return prompts[idx];
+};
+
+/**
+ * פרומפטים של יוזר לפי userId
+ */
+export const getPromptsByUserId = async (userId: string) =>
+  prompts.filter((p) => p.userId === userId);

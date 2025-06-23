@@ -2,11 +2,13 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './slices/authSlice';
 import promptReducer from './slices/promptSlice';
+import categoryReducer from './slices/categorySlice';
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     prompt: promptReducer,
+    category: categoryReducer,
   },
 });
 

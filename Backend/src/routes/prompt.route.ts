@@ -1,46 +1,127 @@
 import express from 'express';
 import * as promptController from '../controllers/prompt.controller';
-
-// Swagger imports
-import swaggerUi from 'swagger-ui-express';
-import swaggerJsdoc from 'swagger-jsdoc';
+import { authenticateJWT } from '../middlewares/authenticateJWT';
 
 const router = express.Router();
 
-// Swagger definition
-const swaggerDefinition = {
-  openapi: '3.0.0',
-  info: {
-    title: 'AI Learning Platform API',
-    version: '1.0.0',
-    description: 'API documentation for the AI Learning Platform',
-  },
-  servers: [
-    {
-      url: 'http://localhost:3000',
-    },
-  ],
-};
-
-const options = {
-  swaggerDefinition,
-  apis: ['./src/routes/prompt.route.ts'], // Path to the API docs
-};
-
-const swaggerSpec = swaggerJsdoc(options);
-
-// Swagger UI route
-router.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// Utility to wrap async route handlers and forward errors to Express error handler
+const asyncHandler = (fn: any) => (req: express.Request, res: express.Response, next: express.NextFunction) =>
+  Promise.resolve(fn(req, res, next)).catch(next);
 
 /**
- * @swagger
- * /prompt:
+ * @openapi
+ * /api/prompts:
  *   post:
- *     summary: Create a new prompt
+ *     security:
+ *       - bearerAuth: []
  *     tags:
- *       - Prompt
+ *       - Prompts
+ *     summary: Create a new prompt
  *     requestBody:
  *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - prompt
+ *               - categoryId
+ *               - subCategoryId
+ *               - userId
+ *             properties:
+ *               prompt:
+ *                 type: string
+ *               categoryId:
+ *                 type: string
+ *               subCategoryId:
+ *                 type: string
+ *               userId:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Prompt created successfully
+ *       400:
+ *         description: Invalid input
+ */
+router.post('/', authenticateJWT, asyncHandler(promptController.createPrompt));
+
+/**
+ * @openapi
+ * /api/prompts:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     tags:
+ *       - Prompts
+ *     summary: Get all prompts
+ *     responses:
+ *       200:
+ *         description: List of all prompts
+ */
+router.get('/', authenticateJWT, asyncHandler(promptController.getAllPrompts));
+
+/**
+ * @openapi
+ * /api/prompts/{id}:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     tags:
+ *       - Prompts
+ *     summary: Get a specific prompt by ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Prompt found
+ *       404:
+ *         description: Prompt not found
+ */
+router.get('/:id', authenticateJWT, asyncHandler(promptController.getPromptById));
+
+/**
+ * @openapi
+ * /api/prompts/{id}:
+ *   delete:
+ *     security:
+ *       - bearerAuth: []
+ *     tags:
+ *       - Prompts
+ *     summary: Delete a prompt by ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Prompt deleted
+ *       404:
+ *         description: Prompt not found
+ */
+router.delete('/:id', authenticateJWT, asyncHandler(promptController.deletePrompt));
+
+/**
+ * @openapi
+ * /api/prompts/{id}:
+ *   patch:
+ *     security:
+ *       - bearerAuth: []
+ *     tags:
+ *       - Prompts
+ *     summary: Update a prompt by ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
  *       content:
  *         application/json:
  *           schema:
@@ -48,13 +129,35 @@ router.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
  *             properties:
  *               prompt:
  *                 type: string
- *                 example: "What is AI?"
+ *               response:
+ *                 type: string
  *     responses:
  *       200:
- *         description: Prompt created successfully
- *       400:
- *         description: Invalid input
+ *         description: Prompt updated
+ *       404:
+ *         description: Prompt not found
  */
-router.post('/', promptController.createPrompt);
+router.patch('/:id', authenticateJWT, asyncHandler(promptController.updatePrompt));
+
+/**
+ * @openapi
+ * /api/prompts/user/{userId}:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     tags:
+ *       - Prompts
+ *     summary: Get all prompts by a specific user
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of user's prompts
+ */
+router.get('/user/:userId', authenticateJWT, asyncHandler(promptController.getPromptsByUserId));
 
 export default router;

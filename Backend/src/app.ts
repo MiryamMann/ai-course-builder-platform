@@ -5,7 +5,12 @@ import cors from "cors";
 dotenv.config();
 
 const app = express();
-app.use(cors());
+
+app.use(cors({
+  origin: "http://localhost:8080", // כתובת הפרונט
+  credentials: true, // אם את משתמשת ב־cookies
+}));
+
 app.use(express.json());
 
 app.get("/", (_, res) => {

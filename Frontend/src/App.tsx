@@ -15,6 +15,7 @@ import Register from "./pages/Register";
 import History from "./pages/History";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import PromptResponse  from './components/PromptResponse'; // Update the path or casing if needed, e.g. './pages/PromptRespond', './pages/Promptrespond', or './pages/Promptrespond.tsx'
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/register" element={<Register />} />
             <Route path="/history" element={<History />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/prompt-response" element={<PromptResponse response="" />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
