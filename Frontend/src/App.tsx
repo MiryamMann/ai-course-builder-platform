@@ -15,7 +15,7 @@ import Register from "./pages/Register";
 import History from "./pages/History";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
-import PromptResponse  from './components/PromptResponse'; // Update the path or casing if needed, e.g. './pages/PromptRespond', './pages/Promptrespond', or './pages/Promptrespond.tsx'
+import PromptResponse  from './pages/PromptResponse'; // Update the path or casing if needed, e.g. './pages/PromptRespond', './pages/Promptrespond', or './pages/Promptrespond.tsx'
 
 const queryClient = new QueryClient();
 

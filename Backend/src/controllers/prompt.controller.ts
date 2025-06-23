@@ -1,10 +1,24 @@
 import { Request, Response } from 'express';
 import * as promptService from '../services/prompt.service';
+import { AuthenticatedRequest } from '../middlewares/authenticateJWT';
 
-export const createPrompt = async (req: Request, res: Response) => {
+export const createPrompt = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const prompt = await promptService.createPrompt(req.body);
-    res.status(201).json(prompt);
+    const { prompt, categoryId, subCategoryId } = req.body;
+
+
+    if (!req.user) {
+      return res.status(401).json({ message: 'Unauthorized: user not found in request' });
+    }
+
+    const newPrompt = await promptService.createPrompt({
+      prompt,
+      categoryId,
+      subCategoryId,
+      userId: req.user.id
+    });
+
+    res.status(201).json(newPrompt);
   } catch (error) {
     res.status(400).json({ message: (error as Error).message });
   }

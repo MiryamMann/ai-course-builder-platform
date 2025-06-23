@@ -2,11 +2,17 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
 export interface AuthenticatedRequest extends Request {
-  user?: any;
+  user?: { id: string , isAdmin: boolean}; 
+}
+
+interface JwtPayload {
+  id: string;
+  isAdmin: boolean;
+  // אפשר להוסיף עוד שדות שהכנסת לטוקן
 }
 
 export const authenticateJWT = (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ): void => {
@@ -25,8 +31,8 @@ export const authenticateJWT = (
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    (req as AuthenticatedRequest).user = decoded;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
+    req.user = decoded;
     next();
   } catch (err) {
     res.status(403).json({ message: 'Invalid or expired token.' });

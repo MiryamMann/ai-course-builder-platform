@@ -12,7 +12,7 @@ import { Label } from './ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { RootState, AppDispatch } from '@/redux/store';
 import { Link } from 'react-router-dom';
-import PromptResponse from './PromptResponse'; 
+import PromptResponse from '../pages/PromptResponse'; 
 
 const PromptForm = () => {
   const [prompt, setPrompt] = useState('');
@@ -51,7 +51,7 @@ const PromptForm = () => {
       submitPrompt({
         prompt,
         categoryId: selectedCategoryId || undefined,
-        subcategoryId: selectedSubCategoryId || undefined,
+        subCategoryId: selectedSubCategoryId || undefined,
       })
     ).then((res) => {
       if (res.meta.requestStatus === 'fulfilled') {
@@ -96,7 +96,7 @@ const PromptForm = () => {
                   onChange={(e) => dispatch(setSelectedSubCategoryId(e.target.value))}
                   className="w-full border p-2 rounded"
                 >
-                  <option value="">Select a subcategory</option>
+                  <option value="">Select a sub-category</option>
                   {selectedCategory.subCategories.map((sub) => (
                     <option key={sub.id} value={sub.id}>
                       {sub.name}

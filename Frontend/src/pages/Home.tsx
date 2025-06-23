@@ -1,6 +1,8 @@
 
 import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
+ import Chatbot from '../components/ChatBot/Chatbot';
+
 
 const Home = () => {
   return (
@@ -47,6 +49,8 @@ const Home = () => {
           </div>
         </div>
       </div>
+            <Chatbot />
+
     </div>
   );
 };

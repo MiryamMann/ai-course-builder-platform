@@ -1,6 +1,8 @@
 import express from 'express';
 import * as authController from '../controllers/auth.controller';
-
+import authorizeAdmin from '../middlewares/authorizeAdmin';
+import { authenticateJWT } from '../middlewares/authenticateJWT';
+import * as adminController from '../controllers/admin.controller';
 const router = express.Router();
 
 /**
@@ -98,5 +100,6 @@ router.post('/login', authController.login);
  *         description: Invalid refresh token
  */
 router.post('/refresh-token', authController.refreshToken);
+router.get('/admin/secure-data', authenticateJWT, authorizeAdmin);
 
 export default router;

@@ -1,72 +1,104 @@
+import { PrismaClient } from '@prisma/client';
 import dotenv from 'dotenv';
 import { OpenAI } from 'openai';
+
 dotenv.config();
 
+const prisma = new PrismaClient();
+
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY!,
 });
 
-const prompts: any[] = [];
-
-
-export const createPrompt = async (data: any) => {
-  const { prompt, categoryId, subcategoryId, userId } = data;
+// יצירת פרומפט כולל קריאה ל־OpenAI ושמירה בדאטהבייס
+export const createPrompt = async (data: {
+  prompt: string;
+  categoryId: string;
+  subCategoryId: string;
+  userId: string;
+}) => {
+  const { prompt, categoryId, subCategoryId, userId } = data;
 
   // קריאה ל־OpenAI
   const gptRes = await openai.chat.completions.create({
-    model: 'gpt-3.5-turbo', // או 'gpt-4'
+    model: 'gpt-3.5-turbo', // אפשר גם gpt-4
     messages: [{ role: 'user', content: prompt }],
   });
 
   const responseText = gptRes.choices[0]?.message?.content || 'No response';
 
-  const newPrompt = {
-    id: String(prompts.length + 1),
-    prompt,
-    categoryId,
-    subcategoryId,
-    userId,
-    response: responseText,
-    createdAt: new Date().toISOString(),
-  };
+  console.log({
+  prompt,
+  categoryId,
+  subCategoryId,
+  userId,
+  response: responseText,
+});
 
-  prompts.push(newPrompt);
+  // שמירה בדאטאבייס
+  const newPrompt = await prisma.prompt.create({
+    data: {
+      prompt,
+      categoryId,
+      userId,
+      response: responseText,
+      subCategoryId,
+    },
+  });
+
   return newPrompt;
 };
 
-/**
- * מחזיר את כל הפרומפטים
- */
-export const getAllPrompts = async () => prompts;
+// כל הפרומפטים במערכת
+export const getAllPrompts = async () => {
+  return prisma.prompt.findMany({
+    orderBy: { createdAt: 'desc' },
+    include: {
+      user: true,
+      category: true,
+      subCategory: true,
+    },
+  });
+};
 
-/**
- * לפי ID
- */
-export const getPromptById = async (id: string) =>
-  prompts.find((p) => p.id === id);
+// פרומפט לפי מזהה
+export const getPromptById = async (id: string) => {
+  return prisma.prompt.findUnique({
+    where: { id },
+    include: {
+      user: true,
+      category: true,
+      subCategory: true,
+    },
+  });
+};
 
-/**
- * מחיקת פרומפט
- */
+// מחיקת פרומפט
 export const deletePrompt = async (id: string) => {
-  const idx = prompts.findIndex((p) => p.id === id);
-  if (idx === -1) return false;
-  prompts.splice(idx, 1);
-  return true;
+  try {
+    await prisma.prompt.delete({ where: { id } });
+    return true;
+  } catch {
+    return false;
+  }
 };
 
-/**
- * עדכון פרומפט קיים
- */
-export const updatePrompt = async (id: string, data: any) => {
-  const idx = prompts.findIndex((p) => p.id === id);
-  if (idx === -1) return null;
-  prompts[idx] = { ...prompts[idx], ...data };
-  return prompts[idx];
+// עדכון פרומפט (אפשר לעדכן רק prompt או response)
+export const updatePrompt = async (id: string, data: Partial<{ prompt: string; response: string }>) => {
+  return prisma.prompt.update({
+    where: { id },
+    data,
+  });
 };
 
-/**
- * פרומפטים של יוזר לפי userId
- */
-export const getPromptsByUserId = async (userId: string) =>
-  prompts.filter((p) => p.userId === userId);
+// פרומפטים של יוזר ספציפי
+export const getPromptsByUserId = async (userId: string) => {
+  return prisma.prompt.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+    include: {
+      category: true,
+      subCategory: true,
+    },
+  });
+};

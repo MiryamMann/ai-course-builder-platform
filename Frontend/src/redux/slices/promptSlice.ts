@@ -5,8 +5,8 @@ interface PromptResponse {
   id: string;
   prompt: string;
   response: string;
-  categoryId?: string;
-  subcategoryId?: string;
+  categoryId: string;
+  subCategoryId: string;
   createdAt: string;
 }
 
@@ -30,22 +30,32 @@ export const submitPrompt = createAsyncThunk(
     {
       prompt,
       categoryId,
-      subcategoryId,
-    }: { prompt: string; categoryId?: string; subcategoryId?: string },
+      subCategoryId,
+    }: { prompt: string; categoryId: string; subCategoryId: string },
     { rejectWithValue }
   ) => {
     try {
-      const response = await api.post('api/prompts', {
+      const dataToSend = {
         prompt,
         categoryId,
-        subcategoryId,
-      });
+        subCategoryId,
+
+      };
+
+      console.log('📤 שולח את הנתונים:', dataToSend);
+
+      const response = await api.post('api/prompts', dataToSend);
+
+      console.log('✅ תגובה מהשרת:', response.data);
+
       return response.data;
     } catch (error: any) {
+      console.error('❌ שגיאה מהשרת:', error.response?.data || error.message);
       return rejectWithValue(error.response?.data || 'Failed to submit prompt');
     }
   }
 );
+
 
 export const fetchUserHistory = createAsyncThunk(
   'prompt/fetchUserHistory',
