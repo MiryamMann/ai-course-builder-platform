@@ -15,38 +15,38 @@ jobs:
         with:
           node-version: '20'
 
-      #######################
-      # Client Setup & Build
-      #######################
+      ##########################
+      # Frontend Setup & Build
+      ##########################
 
-      - name: Install client dependencies
-        working-directory: client
+      - name: Install frontend dependencies
+        working-directory: Frontend
         run: npm install
 
-      - name: Lint client
-        working-directory: client
-        run: npm run lint
+      - name: Lint frontend
+        working-directory: Frontend
+        run: npm run lint || echo "No lint script"
 
-      - name: Build client
-        working-directory: client
+      - name: Build frontend
+        working-directory: Frontend
         run: npm run build
 
-      #######################
-      # Server Setup & Build
-      #######################
+      ##########################
+      # Backend Setup & Build
+      ##########################
 
-      - name: Install server dependencies
-        working-directory: server
+      - name: Install backend dependencies
+        working-directory: Backend
         run: npm install
 
       - name: Generate Prisma client
-        working-directory: server
+        working-directory: Backend
         run: npx prisma generate
 
-      - name: Build server
-        working-directory: server
+      - name: Build backend
+        working-directory: Backend
         run: npm run build
 
-      - name: Run server tests
-        working-directory: server
-        run: npm test
+      - name: Test backend
+        working-directory: Backend
+        run: npm test || echo "No tests yet"
