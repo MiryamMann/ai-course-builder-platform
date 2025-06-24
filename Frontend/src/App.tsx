@@ -26,7 +26,7 @@ const InitApp = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
   const token = useSelector((state: RootState) => state.auth.accessToken); // or the correct property name for the token
-
+console.log('VITE_API_URL:', import.meta.env.VITE_API_URL);
   useEffect(() => {
     if (!user && token) {
       dispatch(fetchCurrentUser());
