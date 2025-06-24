@@ -2,7 +2,8 @@ import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import { Express } from 'express';
 
-const options: swaggerJsdoc.Options = {
+// טיפוס כללי שמחליף את Options (כי אין אותו בגרסאות החדשות)
+const options = {
   definition: {
     openapi: '3.0.0',
     info: {
@@ -24,10 +25,10 @@ const options: swaggerJsdoc.Options = {
       },
     ],
   },
-  apis: ['./src/**/*.ts'], // ודאי שכל הקבצים המתועדים נמצאים כאן
+  apis: ['./src/**/*.ts'], // ודאי שה־routes שלך נמצאים כאן
 };
 
-const swaggerSpec = swaggerJsdoc(options);
+const swaggerSpec = swaggerJsdoc(options as any); // 'as any' כדי להימנע משגיאת טיפוס
 
 export function setupSwagger(app: Express) {
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
