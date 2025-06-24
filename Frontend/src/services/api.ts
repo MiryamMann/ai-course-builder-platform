@@ -1,10 +1,16 @@
 import axios from 'axios';
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
-});
-console.log('BASE URL:', api.defaults.baseURL);
+// תומך גם ב־Vite וגם ב־Next.js בצורה דינמית
+const apiUrl =
+  typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL
+    ? import.meta.env.VITE_API_URL
+    : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
+const api = axios.create({
+  baseURL: apiUrl,
+});
+
+console.log('BASE URL:', api.defaults.baseURL);
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
