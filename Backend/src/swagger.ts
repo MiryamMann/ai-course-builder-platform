@@ -2,7 +2,6 @@ import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import { Express } from 'express';
 
-// טיפוס כללי שמחליף את Options (כי אין אותו בגרסאות החדשות)
 const options = {
   definition: {
     openapi: '3.0.0',
@@ -25,11 +24,14 @@ const options = {
       },
     ],
   },
-  apis: ['./src/**/*.ts'], // ודאי שה־routes שלך נמצאים כאן
+  apis: ['./src/**/*.ts'],
 };
 
-const swaggerSpec = swaggerJsdoc(options as any); // 'as any' כדי להימנע משגיאת טיפוס
+const swaggerSpec = swaggerJsdoc(options as any);
 
 export function setupSwagger(app: Express) {
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  if (process.env.NODE_ENV !== 'production') {
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+    console.log('✅ Swagger is available at /api-docs');
+  }
 }
