@@ -1,13 +1,7 @@
 import axios from 'axios';
 
-// תומך גם ב־Vite וגם ב־Next.js בצורה דינמית
-const apiUrl =
-  typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL
-    ? import.meta.env.VITE_API_URL
-    : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-
 const api = axios.create({
-  baseURL: apiUrl,
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
 });
 
 console.log('BASE URL:', api.defaults.baseURL);
@@ -27,12 +21,10 @@ api.interceptors.response.use(
     if (error.response?.status === 403 && !originalRequest._retry) {
       originalRequest._retry = true;
       const refreshToken = localStorage.getItem('refreshToken');
-
       try {
         const res = await axios.post(`${api.defaults.baseURL}/api/auth/refresh-token`, {
           refreshToken,
         });
-
         const newAccessToken = res.data.accessToken;
         localStorage.setItem('token', newAccessToken);
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
@@ -44,7 +36,6 @@ api.interceptors.response.use(
         window.location.href = '/login';
       }
     }
-
     return Promise.reject(error);
   }
 );
