@@ -7,8 +7,11 @@ dotenv.config();
 const app = express();
 
 app.use(cors({
-  origin: "http://localhost:5173", // כתובת הפרונט
-  credentials: true, // אם את משתמשת ב־cookies
+origin: [
+    "http://localhost:5173", 
+    "https://ai-course-builder-platform.vercel.app"
+  ],
+  credentials: true, 
 }));
 
 app.use(express.json());
