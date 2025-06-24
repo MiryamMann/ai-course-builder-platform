@@ -15,6 +15,7 @@ export async function register(data: {
   email: string;
   password: string;
   phone?: string;
+  isAdmin?: boolean; // מאפשר יצירת אדמין
 }) {
   if (!data.name || !data.email || !data.password) {
     const error = new Error('Missing required fields: name, email or password');
@@ -39,12 +40,18 @@ export async function register(data: {
       email: data.email,
       passwordHash,
       phone: data.phone,
+      isAdmin: data.isAdmin ?? false, // ברירת מחדל: false
     },
   });
 
-  const accessToken = jwt.sign({ userId: user.id }, JWT_SECRET!, {
-    expiresIn: '15m',
-  });
+  const accessToken = jwt.sign(
+    {
+      id: user.id,
+      isAdmin: user.isAdmin,
+    },
+    JWT_SECRET!,
+    { expiresIn: '15m' }
+  );
 
   const refreshTokenValue = crypto.randomUUID();
   await prisma.refreshToken.create({
@@ -94,9 +101,14 @@ export async function login(data: {
     throw error;
   }
 
-  const accessToken = jwt.sign({ userId: user.id }, JWT_SECRET!, {
-    expiresIn: '15m',
-  });
+  const accessToken = jwt.sign(
+    {
+      id: user.id,
+      isAdmin: user.isAdmin,
+    },
+    JWT_SECRET!,
+    { expiresIn: '15m' }
+  );
 
   const refreshTokenValue = crypto.randomUUID();
   await prisma.refreshToken.create({
@@ -150,7 +162,10 @@ export async function refreshToken(refreshToken: string) {
   }
 
   const accessToken = jwt.sign(
-    { userId: tokenInDb.user.id },
+    {
+      id: tokenInDb.user.id,
+      isAdmin: tokenInDb.user.isAdmin,
+    },
     JWT_SECRET!,
     { expiresIn: '15m' }
   );

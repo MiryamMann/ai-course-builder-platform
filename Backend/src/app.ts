@@ -7,7 +7,7 @@ dotenv.config();
 const app = express();
 
 app.use(cors({
-  origin: "http://localhost:8080", // כתובת הפרונט
+  origin: "http://localhost:5173", // כתובת הפרונט
   credentials: true, // אם את משתמשת ב־cookies
 }));
 

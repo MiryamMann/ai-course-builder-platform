@@ -1,6 +1,7 @@
 
 import PromptForm from '../components/PromptForm';
 import Navbar from '../components/Navbar';
+import Chatbot from '@/components/ChatBot/Chatbot';
 
 const Lessons = () => {
   return (
@@ -8,6 +9,7 @@ const Lessons = () => {
       <Navbar />
       <div className="container mx-auto py-8">
         <PromptForm />
+        <Chatbot/>
       </div>
     </div>
   );

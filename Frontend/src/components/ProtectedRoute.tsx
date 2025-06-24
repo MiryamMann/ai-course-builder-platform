@@ -8,17 +8,20 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children, adminOnly = false }: ProtectedRouteProps) => {
-  const { isAuthenticated, isAdmin } = useAuth();
+  const { isAuthenticated, isAdmin, loading } = useAuth();
+
+  if (loading) {
+    return <div className="text-center py-10">Loading...</div>; // או spinner
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
   if (adminOnly && !isAdmin) {
-    return <Navigate to="/lessons" replace />;
+    return <Navigate to="/lessons" replace />; // לא להחזיר ל־/admin — זה גורם ללופ
   }
 
   return <>{children}</>;
 };
-
 export default ProtectedRoute;

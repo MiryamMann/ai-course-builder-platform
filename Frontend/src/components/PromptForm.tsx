@@ -17,7 +17,7 @@ import PromptResponse from '../pages/PromptResponse';
 const PromptForm = () => {
   const [prompt, setPrompt] = useState('');
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [showResponse, setShowResponse] = useState(false); // <--- חדש
+  const [showResponse, setShowResponse] = useState(false);
 
   const dispatch = useDispatch<AppDispatch>();
   const { isAuthenticated } = useAuth();
@@ -30,6 +30,7 @@ const PromptForm = () => {
   } = useSelector((state: RootState) => state.category);
 
   const currentResponse = useSelector((state: RootState) => state.prompt.currentResponse);
+  const promptLoading = useSelector((state: RootState) => state.prompt.loading);
 
   const selectedCategory = Array.isArray(categories)
     ? categories.find((c) => c.id === selectedCategoryId)
@@ -38,6 +39,19 @@ const PromptForm = () => {
   useEffect(() => {
     dispatch(fetchCategories());
   }, [dispatch]);
+
+  // Simple animated dots component
+  const AnimatedDots = () => {
+    const [dotCount, setDotCount] = useState(1);
+    useEffect(() => {
+      if (!promptLoading) return;
+      const interval = setInterval(() => {
+        setDotCount((prev) => (prev === 3 ? 1 : prev + 1));
+      }, 400);
+      return () => clearInterval(interval);
+    }, [promptLoading]);
+    return <span>{'.'.repeat(dotCount)}</span>;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,8 +132,14 @@ const PromptForm = () => {
             />
           </div>
 
-          <Button type="submit" disabled={loading || !prompt.trim()}>
-            {loading ? 'Generating...' : 'Submit'}
+          <Button type="submit" disabled={loading || promptLoading || !prompt.trim()}>
+            {promptLoading ? (
+              <>
+                Generating<AnimatedDots />
+              </>
+            ) : (
+              'Submit'
+            )}
           </Button>
         </form>
       )}

@@ -5,12 +5,12 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  role: 'user' | 'admin';
+  isAdmin: boolean;
 }
 
 interface AuthState {
   user: User | null;
-  token: string | null;
+  accessToken: string | null;
   isAuthenticated: boolean;
   loading: boolean;
   error: string | null;
@@ -21,7 +21,7 @@ const storedUser = localStorage.getItem('user');
 
 const initialState: AuthState = {
   user: storedUser ? JSON.parse(storedUser) : null,
-  token: storedToken,
+  accessToken: storedToken,
   isAuthenticated: !!storedToken,
   loading: false,
   error: null,
@@ -30,25 +30,48 @@ const initialState: AuthState = {
 // Async thunks
 export const loginUser = createAsyncThunk(
   'auth/login',
-  async ({ email, password }: { email: string; password: string }) => {
-    const response = await api.post('/api/auth/login', { email, password });
-    return response.data;
+  async (
+    { email, password }: { email: string; password: string },
+    thunkAPI
+  ) => {
+    try {
+      const response = await api.post('/api/auth/login', { email, password });
+      return response.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error.response?.data?.message || 'Login failed');
+    }
   }
 );
 
 export const registerUser = createAsyncThunk(
   'auth/register',
-  async ({ email, password, name, phone }: { email: string; password: string; name: string; phone: string }) => {
-    const response = await api.post('/api/auth/register', { email, password, name });
-    return response.data;
+  async (
+    { email, password, name, phone }: { email: string; password: string; name: string; phone: string },
+    thunkAPI
+  ) => {
+    try {
+      const response = await api.post('/api/auth/register', {
+        email,
+        password,
+        name,
+        phone,
+      });
+      return response.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error.response?.data?.message || 'Registration failed');
+    }
   }
 );
 
 export const fetchCurrentUser = createAsyncThunk(
   'auth/fetchCurrentUser',
-  async () => {
-    const response = await api.get('/api/auth/user');
-    return response.data;
+  async (_, thunkAPI) => {
+    try {
+      const response = await api.get('/api/auth/user');
+      return response.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error.response?.data?.message || 'Failed to fetch user');
+    }
   }
 );
 
@@ -58,9 +81,10 @@ const authSlice = createSlice({
   reducers: {
     logout: (state) => {
       state.user = null;
-      state.token = null;
+      state.accessToken = null;
       state.isAuthenticated = false;
       localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
       localStorage.removeItem('user');
     },
     clearError: (state) => {
@@ -77,15 +101,17 @@ const authSlice = createSlice({
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
         state.user = action.payload.user;
-        state.token = action.payload.token;
+        state.accessToken = action.payload.accessToken;
         state.isAuthenticated = true;
-        localStorage.setItem('token', action.payload.token);
+        localStorage.setItem('token', action.payload.accessToken);
+        localStorage.setItem('refreshToken', action.payload.refreshToken);
         localStorage.setItem('user', JSON.stringify(action.payload.user));
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || 'Login failed';
+        state.error = action.payload as string;
       })
+
       // Register
       .addCase(registerUser.pending, (state) => {
         state.loading = true;
@@ -94,30 +120,36 @@ const authSlice = createSlice({
       .addCase(registerUser.fulfilled, (state, action) => {
         state.loading = false;
         state.user = action.payload.user;
-        state.token = action.payload.token;
+        state.accessToken = action.payload.accessToken;
         state.isAuthenticated = true;
-        localStorage.setItem('token', action.payload.token);
-        console.log('token', action.payload.token);
+        localStorage.setItem('token', action.payload.accessToken);
         localStorage.setItem('refreshToken', action.payload.refreshToken);
         localStorage.setItem('user', JSON.stringify(action.payload.user));
-      
-
-
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || 'Registration failed';
+        state.error = action.payload as string;
       })
+
       // Fetch current user
+      .addCase(fetchCurrentUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(fetchCurrentUser.fulfilled, (state, action) => {
+        state.loading = false;
         state.user = action.payload.user;
         state.isAuthenticated = true;
+        localStorage.setItem('user', JSON.stringify(action.payload.user));
       })
-      .addCase(fetchCurrentUser.rejected, (state) => {
+      .addCase(fetchCurrentUser.rejected, (state, action) => {
+        state.loading = false;
         state.user = null;
-        state.token = null;
+        state.accessToken = null;
         state.isAuthenticated = false;
+        state.error = action.payload as string;
         localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
       });
   },

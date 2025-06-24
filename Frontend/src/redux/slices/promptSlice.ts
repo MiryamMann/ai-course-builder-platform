@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import api from '../../services/api';
 
 interface PromptResponse {
@@ -8,6 +8,9 @@ interface PromptResponse {
   categoryId: string;
   subCategoryId: string;
   createdAt: string;
+  user?: { name: string };
+  category?: { name: string };
+  subCategory?: { name: string };
 }
 
 interface PromptState {
@@ -15,6 +18,12 @@ interface PromptState {
   history: PromptResponse[];
   loading: boolean;
   error: string | null;
+  openPromptId: string | null;
+
+  adminPrompts: PromptResponse[]; // ✅ חדש
+  adminTotal: number;             // ✅ חדש
+  adminPage: number;              // ✅ חדש
+  adminSearch: string;            // ✅ חדש
 }
 
 const initialState: PromptState = {
@@ -22,8 +31,15 @@ const initialState: PromptState = {
   history: [],
   loading: false,
   error: null,
+  openPromptId: null,
+
+  adminPrompts: [], // ✅
+  adminTotal: 0,    // ✅
+  adminPage: 1,     // ✅
+  adminSearch: '',  // ✅
 };
 
+// שליחת פרומפט לשרת
 export const submitPrompt = createAsyncThunk(
   'prompt/submitPrompt',
   async (
@@ -35,28 +51,16 @@ export const submitPrompt = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const dataToSend = {
-        prompt,
-        categoryId,
-        subCategoryId,
-
-      };
-
-      console.log('📤 שולח את הנתונים:', dataToSend);
-
+      const dataToSend = { prompt, categoryId, subCategoryId };
       const response = await api.post('api/prompts', dataToSend);
-
-      console.log('✅ תגובה מהשרת:', response.data);
-
       return response.data;
     } catch (error: any) {
-      console.error('❌ שגיאה מהשרת:', error.response?.data || error.message);
       return rejectWithValue(error.response?.data || 'Failed to submit prompt');
     }
   }
 );
 
-
+// קבלת היסטוריה של המשתמש
 export const fetchUserHistory = createAsyncThunk(
   'prompt/fetchUserHistory',
   async (_, { rejectWithValue }) => {
@@ -65,6 +69,22 @@ export const fetchUserHistory = createAsyncThunk(
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data || 'Failed to fetch history');
+    }
+  }
+);
+
+// קבלת פרומפטים לאדמין עם חיפוש ופייג'ינציה
+export const fetchAdminPrompts = createAsyncThunk(
+  'prompt/fetchAdminPrompts',
+  async (_, { getState, rejectWithValue }) => {
+    try {
+      const state = getState() as { prompt: PromptState };
+      const { adminPage, adminSearch } = state.prompt;
+
+      const res = await api.get(`/api/admin/prompts?search=${adminSearch}&page=${adminPage}&pageSize=10`);
+      return res.data; // מצופה שיכיל { prompts: [], total: number }
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data || 'Failed to fetch admin prompts');
     }
   }
 );
@@ -78,6 +98,16 @@ const promptSlice = createSlice({
     },
     clearError: (state) => {
       state.error = null;
+    },
+    togglePrompt: (state, action: PayloadAction<string>) => {
+      state.openPromptId = state.openPromptId === action.payload ? null : action.payload;
+    },
+    setAdminSearch: (state, action: PayloadAction<string>) => {
+      state.adminSearch = action.payload;
+      state.adminPage = 1; // חזרה לעמוד ראשון
+    },
+    setAdminPage: (state, action: PayloadAction<number>) => {
+      state.adminPage = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -97,11 +127,20 @@ const promptSlice = createSlice({
       })
       .addCase(fetchUserHistory.fulfilled, (state, action) => {
         state.history = action.payload;
+      })
+      .addCase(fetchAdminPrompts.fulfilled, (state, action) => {
+        state.adminPrompts = action.payload.prompts;
+        state.adminTotal = action.payload.total;
       });
   },
-
 });
 
+export const {
+  clearCurrentResponse,
+  clearError,
+  togglePrompt,
+  setAdminSearch,
+  setAdminPage,
+} = promptSlice.actions;
 
-export const { clearCurrentResponse, clearError } = promptSlice.actions;
 export default promptSlice.reducer;

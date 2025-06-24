@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import * as authService from '../services/auth.service';
 import { getAllUsers } from '../services/admin.service';
+import { getAllPromptsWithUserAndCategory } from '../services/admin.service';
 
 export const getUsers = async (req: Request, res: Response) => {
   try {
@@ -79,6 +80,20 @@ export const getUserHistory = async (req: Request, res: Response) => {
     res.status(200).json({ message: `History for user with ID ${userId} fetched successfully.` });
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch user history', error: (error as Error).message });
+  }
+};
+
+export const getAllPrompts = async (req: Request, res: Response) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const pageSize = parseInt(req.query.pageSize as string) || 10;
+    const search = (req.query.search as string) || '';
+
+    const result = await getAllPromptsWithUserAndCategory({ page, pageSize, search });
+
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch prompts', error: (error as Error).message });
   }
 };
 

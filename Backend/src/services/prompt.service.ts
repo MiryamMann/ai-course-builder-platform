@@ -10,7 +10,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
 });
 
-// יצירת פרומפט כולל קריאה ל־OpenAI ושמירה בדאטהבייס
+// יצירת prompt חדש עם שליחה ל־GPT
 export const createPrompt = async (data: {
   prompt: string;
   categoryId: string;
@@ -19,21 +19,21 @@ export const createPrompt = async (data: {
 }) => {
   const { prompt, categoryId, subCategoryId, userId } = data;
 
-  // קריאה ל־OpenAI
+  // שליפת שמות הקטגוריות
+  const category = await prisma.category.findUnique({ where: { id: categoryId } });
+  const subCategory = await prisma.subCategory.findUnique({ where: { id: subCategoryId } });
+
+  // יצירת prompt עם הקשר ברור
+  const fullPrompt = `נושא השיעור הוא: ${category?.name} > ${subCategory?.name}.
+כתוב שיעור מפורט על: ${prompt}`;
+
+  // שליחה ל־OpenAI
   const gptRes = await openai.chat.completions.create({
-    model: 'gpt-3.5-turbo', // אפשר גם gpt-4
-    messages: [{ role: 'user', content: prompt }],
+    model: 'gpt-3.5-turbo',
+    messages: [{ role: 'user', content: fullPrompt }],
   });
 
   const responseText = gptRes.choices[0]?.message?.content || 'No response';
-
-  console.log({
-  prompt,
-  categoryId,
-  subCategoryId,
-  userId,
-  response: responseText,
-});
 
   // שמירה בדאטאבייס
   const newPrompt = await prisma.prompt.create({
@@ -83,15 +83,18 @@ export const deletePrompt = async (id: string) => {
   }
 };
 
-// עדכון פרומפט (אפשר לעדכן רק prompt או response)
-export const updatePrompt = async (id: string, data: Partial<{ prompt: string; response: string }>) => {
+// עדכון prompt – רק את שדות התוכן
+export const updatePrompt = async (
+  id: string,
+  data: Partial<{ prompt: string; response: string }>
+) => {
   return prisma.prompt.update({
     where: { id },
     data,
   });
 };
 
-// פרומפטים של יוזר ספציפי
+// כל הפרומפטים של יוזר מסוים
 export const getPromptsByUserId = async (userId: string) => {
   return prisma.prompt.findMany({
     where: { userId },

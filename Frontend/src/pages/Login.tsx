@@ -2,33 +2,50 @@ import { useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../hooks/useRedux';
 import { loginUser } from '../redux/slices/authSlice';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom'; // ✅ לצורך ניתוב
+import { useNavigate } from 'react-router-dom';
 
 const LoginForm = () => {
   const dispatch = useAppDispatch();
-  const navigate = useNavigate(); // ✅ מוסיפים ניתוב
+  const navigate = useNavigate();
   const { error, loading } = useAppSelector((state) => state.auth);
   const { toast } = useToast();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [formErrors, setFormErrors] = useState<{ email?: string; password?: string }>({});
+
+  const validateForm = () => {
+    const errors: typeof formErrors = {};
+    if (!email) {
+      errors.email = 'Email is required';
+    } else if (!/^\S+@\S+\.\S+$/.test(email)) {
+      errors.email = 'Invalid email format';
+    }
+
+    if (!password) {
+      errors.password = 'Password is required';
+    } else if (password.length < 6) {
+      errors.password = 'Password must be at least 6 characters';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateForm()) return;
+
     try {
       const result = await dispatch(loginUser({ email, password })).unwrap();
-
-      // ✅ שמירת המשתמש ב-localStorage
       localStorage.setItem('user', JSON.stringify(result.user));
       localStorage.setItem('token', result.accessToken);
 
-      // ✅ Toast ברוך הבא
       toast({
         title: 'Welcome back!',
         description: `Hello ${result.user.name}`,
       });
 
-      // ✅ ניתוב ל־/lessons
       navigate('/lessons');
     } catch (err: any) {
       toast({
@@ -57,9 +74,9 @@ const LoginForm = () => {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
               className="mt-1 w-full rounded-md border px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             />
+            {formErrors.email && <p className="text-red-500 text-sm mt-1">{formErrors.email}</p>}
           </div>
 
           <div>
@@ -72,9 +89,9 @@ const LoginForm = () => {
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required
               className="mt-1 w-full rounded-md border px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             />
+            {formErrors.password && <p className="text-red-500 text-sm mt-1">{formErrors.password}</p>}
           </div>
 
           <div>
