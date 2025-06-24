@@ -20,6 +20,7 @@ import NotFound from "./pages/NotFound";
 import PromptResponse from "./pages/PromptResponse";
 
 const queryClient = new QueryClient();
+console.log('DEBUG:', import.meta.env.VITE_API_URL);
 
 // קומפוננטת עטיפה שתבצע בדיקה בעת טעינה
 const InitApp = () => {
