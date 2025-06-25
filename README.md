@@ -86,5 +86,5 @@ Copy
 Edit
 ## 🌐 Deployment
 
-The frontend of this project is deployed on [Vercel]([https://vercel.com](https://ai-course-builder-platform.vercel.app/)), allowing for fast, serverless delivery and seamless CI/CD integration.
+The frontend of this project is deployed on [([https://vercel.com](https://ai-course-builder-platform.vercel.app/)), allowing for fast, serverless delivery and seamless CI/CD integration.
 
