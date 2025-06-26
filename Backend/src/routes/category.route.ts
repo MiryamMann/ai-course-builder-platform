@@ -1,5 +1,7 @@
 import express from 'express';
 import * as categoryController from '../controllers/category.controller';
+import { validateBody, validateParams } from '../middlewares/validate';
+import { CreateCategorySchema, CreateSubCategorySchema, CategoryIdParamSchema } from '../validations/index';
 
 const router = express.Router();
 
@@ -13,34 +15,6 @@ const router = express.Router();
  *     responses:
  *       200:
  *         description: List of categories
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: string
- *                   name:
- *                     type: string
- *                   subCategories:
- *                     type: array
- *                     items:
- *                       type: object
- *                       properties:
- *                         id:
- *                           type: string
- *                         name:
- *                           type: string
- *                         categoryId:
- *                           type: string
- *                   createdAt:
- *                     type: string
- *                     format: date-time
- *                   updatedAt:
- *                     type: string
- *                     format: date-time
  */
 router.get('/', categoryController.getAllCategories);
 
@@ -56,20 +30,13 @@ router.get('/', categoryController.getAllCategories);
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - name
- *             properties:
- *               name:
- *                 type: string
- *                 example: Productivity
+ *             $ref: '#/components/schemas/CreateCategory'
  *     responses:
  *       201:
  *         description: Category created successfully
- *       400:
- *         description: Bad request
  */
-router.post('/', categoryController.createCategory);
+router.post('/', validateBody(CreateCategorySchema), categoryController.createCategory);
+
 /**
  * @openapi
  * /api/categories/{categoryId}/subcategories:
@@ -83,26 +50,21 @@ router.post('/', categoryController.createCategory);
  *         required: true
  *         schema:
  *           type: string
- *         description: The ID of the category to add a subcategory to
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - name
- *             properties:
- *               name:
- *                 type: string
- *                 example: Time Management
+ *             $ref: '#/components/schemas/CreateSubCategory'
  *     responses:
  *       201:
  *         description: Subcategory added successfully
- *       400:
- *         description: Bad request
- *       404:
- *         description: Category not found
  */
-router.post('/:categoryId/subcategories', categoryController.addSubCategory);
+router.post(
+  '/:categoryId/subcategories',
+  validateParams(CategoryIdParamSchema),
+  validateBody(CreateSubCategorySchema),
+  categoryController.addSubCategory
+);
+
 export default router;

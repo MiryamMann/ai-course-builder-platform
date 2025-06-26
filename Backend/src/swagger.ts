@@ -2,7 +2,6 @@ import { Express } from 'express';
 
 export function setupSwagger(app: Express) {
   if (process.env.NODE_ENV !== 'production') {
-    // ייבוא דינמי – מתבצע רק בזמן ריצה, רק בפיתוח
     const swaggerJsdoc = require('swagger-jsdoc');
     const swaggerUi = require('swagger-ui-express');
 

@@ -1,55 +1,58 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-  fetchCategories,
-  setSelectedCategoryId,
-  setSelectedSubCategoryId,
-} from '@/redux/slices/categorySlice';
-import { submitPrompt } from '@/redux/slices/promptSlice';
+  setCategoryId,
+  setSubCategoryId,
+  setPromptText,
+  submitPrompt,
+  clearCurrentResponse,
+} from '@/redux/slices/promptSlice';
+import { fetchCategories } from '@/redux/slices/categorySlice';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from './ui/button';
 import { Label } from './ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { RootState, AppDispatch } from '@/redux/store';
 import { Link } from 'react-router-dom';
-import PromptResponse from '../pages/PromptResponse'; 
+import PromptResponse from '../pages/PromptResponse';
+import { useState } from 'react';
 
 const PromptForm = () => {
-  const [prompt, setPrompt] = useState('');
+  const dispatch = useDispatch<AppDispatch>();
+  const { isAuthenticated } = useAuth();
+
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showResponse, setShowResponse] = useState(false);
 
-  const dispatch = useDispatch<AppDispatch>();
-  const { isAuthenticated } = useAuth();
+  const {
+    categoryId,
+    subCategoryId,
+    promptText,
+    currentResponse,
+    loading,
+  } = useSelector((state: RootState) => state.prompt);
 
   const {
     categories,
     selectedCategoryId,
     selectedSubCategoryId,
-    loading,
   } = useSelector((state: RootState) => state.category);
 
-  const currentResponse = useSelector((state: RootState) => state.prompt.currentResponse);
-  const promptLoading = useSelector((state: RootState) => state.prompt.loading);
-
-  const selectedCategory = Array.isArray(categories)
-    ? categories.find((c) => c.id === selectedCategoryId)
-    : undefined;
+  const selectedCategory = categories?.find((c) => c.id === categoryId);
 
   useEffect(() => {
     dispatch(fetchCategories());
   }, [dispatch]);
 
-  // Simple animated dots component
   const AnimatedDots = () => {
     const [dotCount, setDotCount] = useState(1);
     useEffect(() => {
-      if (!promptLoading) return;
+      if (!loading) return;
       const interval = setInterval(() => {
         setDotCount((prev) => (prev === 3 ? 1 : prev + 1));
       }, 400);
       return () => clearInterval(interval);
-    }, [promptLoading]);
+    }, [loading]);
     return <span>{'.'.repeat(dotCount)}</span>;
   };
 
@@ -59,15 +62,9 @@ const PromptForm = () => {
       setShowLoginModal(true);
       return;
     }
-    if (!prompt.trim()) return;
+    if (!promptText.trim()) return;
 
-    dispatch(
-      submitPrompt({
-        prompt,
-        categoryId: selectedCategoryId || undefined,
-        subCategoryId: selectedSubCategoryId || undefined,
-      })
-    ).then((res) => {
+    dispatch(submitPrompt()).then((res) => {
       if (res.meta.requestStatus === 'fulfilled') {
         setShowResponse(true);
       }
@@ -78,8 +75,14 @@ const PromptForm = () => {
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       {showResponse && currentResponse ? (
         <>
-          <PromptResponse response={currentResponse} />
-          <Button onClick={() => setShowResponse(false)} className="mt-4">
+          <PromptResponse />
+          <Button
+            onClick={() => {
+              setShowResponse(false);
+              dispatch(clearCurrentResponse());
+            }}
+            className="mt-4"
+          >
             🔄 Submit another prompt
           </Button>
         </>
@@ -89,12 +92,12 @@ const PromptForm = () => {
             <div>
               <Label>Category</Label>
               <select
-                value={selectedCategoryId}
-                onChange={(e) => dispatch(setSelectedCategoryId(e.target.value))}
+                value={categoryId}
+                onChange={(e) => dispatch(setCategoryId(e.target.value))}
                 className="w-full border p-2 rounded"
               >
                 <option value="">Select a category</option>
-                {(Array.isArray(categories) ? categories : []).map((cat) => (
+                {categories.map((cat) => (
                   <option key={cat.id} value={cat.id}>
                     {cat.name}
                   </option>
@@ -106,8 +109,8 @@ const PromptForm = () => {
               <div>
                 <Label>Subcategory</Label>
                 <select
-                  value={selectedSubCategoryId}
-                  onChange={(e) => dispatch(setSelectedSubCategoryId(e.target.value))}
+                  value={subCategoryId}
+                  onChange={(e) => dispatch(setSubCategoryId(e.target.value))}
                   className="w-full border p-2 rounded"
                 >
                   <option value="">Select a sub-category</option>
@@ -124,16 +127,16 @@ const PromptForm = () => {
           <div>
             <Label>Prompt</Label>
             <textarea
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
+              value={promptText}
+              onChange={(e) => dispatch(setPromptText(e.target.value))}
               required
               rows={4}
               className="w-full border p-2 rounded"
             />
           </div>
 
-          <Button type="submit" disabled={loading || promptLoading || !prompt.trim()}>
-            {promptLoading ? (
+          <Button type="submit" disabled={loading || !promptText.trim()}>
+            {loading ? (
               <>
                 Generating<AnimatedDots />
               </>

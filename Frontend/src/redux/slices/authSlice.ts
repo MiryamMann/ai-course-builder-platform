@@ -14,6 +14,12 @@ interface AuthState {
   isAuthenticated: boolean;
   loading: boolean;
   error: string | null;
+  form: {
+    name: string;
+    email: string;
+    password: string;
+    phone: string;
+  };
 }
 
 const storedToken = localStorage.getItem('token');
@@ -25,17 +31,22 @@ const initialState: AuthState = {
   isAuthenticated: !!storedToken,
   loading: false,
   error: null,
+  form: {
+    name: '',
+    email: '',
+    password: '',
+    phone: '',
+  },
 };
 
-// Async thunks
-export const loginUser = createAsyncThunk(
+ const loginUser = createAsyncThunk(
   'auth/login',
   async (
-    { email, password }: { email: string; password: string },
+    credentials: { email: string; password: string },
     thunkAPI
   ) => {
     try {
-      const response = await api.post('/api/auth/login', { email, password });
+      const response = await api.post('/api/auth/login', credentials);
       return response.data;
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error.response?.data?.message || 'Login failed');
@@ -43,12 +54,11 @@ export const loginUser = createAsyncThunk(
   }
 );
 
-export const registerUser = createAsyncThunk(
+ const registerUser = createAsyncThunk(
   'auth/register',
-  async (
-    { email, password, name, phone }: { email: string; password: string; name: string; phone: string },
-    thunkAPI
-  ) => {
+  async (_, thunkAPI) => {
+    const state = thunkAPI.getState() as { auth: AuthState };
+    const { email, password, name, phone } = state.auth.form;
     try {
       const response = await api.post('/api/auth/register', {
         email,
@@ -63,7 +73,7 @@ export const registerUser = createAsyncThunk(
   }
 );
 
-export const fetchCurrentUser = createAsyncThunk(
+ const fetchCurrentUser = createAsyncThunk(
   'auth/fetchCurrentUser',
   async (_, thunkAPI) => {
     try {
@@ -90,10 +100,19 @@ const authSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    setFormField: (
+      state,
+      action: PayloadAction<{ field: keyof AuthState['form']; value: string }>
+    ) => {
+      state.form[action.payload.field] = action.payload.value;
+    },
+    clearForm: (state) => {
+      state.form = { name: '', email: '', password: '', phone: '' };
+    },
   },
   extraReducers: (builder) => {
     builder
-      // Login
+      // LOGIN
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -112,7 +131,6 @@ const authSlice = createSlice({
         state.error = action.payload as string;
       })
 
-      // Register
       .addCase(registerUser.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -131,7 +149,6 @@ const authSlice = createSlice({
         state.error = action.payload as string;
       })
 
-      // Fetch current user
       .addCase(fetchCurrentUser.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -155,5 +172,6 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout, clearError } = authSlice.actions;
+export const { logout, clearError, setFormField, clearForm } = authSlice.actions;
+export { loginUser, registerUser, fetchCurrentUser };
 export default authSlice.reducer;

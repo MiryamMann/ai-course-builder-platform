@@ -10,7 +10,6 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
 });
 
-// יצירת prompt חדש עם שליחה ל־GPT
 export const createPrompt = async (data: {
   prompt: string;
   categoryId: string;
@@ -19,15 +18,12 @@ export const createPrompt = async (data: {
 }) => {
   const { prompt, categoryId, subCategoryId, userId } = data;
 
-  // שליפת שמות הקטגוריות
   const category = await prisma.category.findUnique({ where: { id: categoryId } });
   const subCategory = await prisma.subCategory.findUnique({ where: { id: subCategoryId } });
 
-  // יצירת prompt עם הקשר ברור
   const fullPrompt = `נושא השיעור הוא: ${category?.name} > ${subCategory?.name}.
 כתוב שיעור מפורט על: ${prompt}`;
 
-  // שליחה ל־OpenAI
   const gptRes = await openai.chat.completions.create({
     model: 'gpt-3.5-turbo',
     messages: [{ role: 'user', content: fullPrompt }],
@@ -35,7 +31,6 @@ export const createPrompt = async (data: {
 
   const responseText = gptRes.choices[0]?.message?.content || 'No response';
 
-  // שמירה בדאטאבייס
   const newPrompt = await prisma.prompt.create({
     data: {
       prompt,
@@ -49,7 +44,6 @@ export const createPrompt = async (data: {
   return newPrompt;
 };
 
-// כל הפרומפטים במערכת
 export const getAllPrompts = async () => {
   return prisma.prompt.findMany({
     orderBy: { createdAt: 'desc' },
@@ -61,7 +55,6 @@ export const getAllPrompts = async () => {
   });
 };
 
-// פרומפט לפי מזהה
 export const getPromptById = async (id: string) => {
   return prisma.prompt.findUnique({
     where: { id },
@@ -73,7 +66,6 @@ export const getPromptById = async (id: string) => {
   });
 };
 
-// מחיקת פרומפט
 export const deletePrompt = async (id: string) => {
   try {
     await prisma.prompt.delete({ where: { id } });
@@ -83,7 +75,6 @@ export const deletePrompt = async (id: string) => {
   }
 };
 
-// עדכון prompt – רק את שדות התוכן
 export const updatePrompt = async (
   id: string,
   data: Partial<{ prompt: string; response: string }>
@@ -94,7 +85,6 @@ export const updatePrompt = async (
   });
 };
 
-// כל הפרומפטים של יוזר מסוים
 export const getPromptsByUserId = async (userId: string) => {
   return prisma.prompt.findMany({
     where: { userId },

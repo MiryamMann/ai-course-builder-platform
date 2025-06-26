@@ -1,16 +1,15 @@
-import React from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/redux/store';
 
-interface PromptResponseProps {
-  response: string;
-}
+const PromptResponse = () => {
+  const response = useSelector((state: RootState) => state.prompt.currentResponse);
 
-const PromptResponse: React.FC<PromptResponseProps> = ({ response }) => {
+  if (!response) return null;
+
   return (
-    <div className="mt-6 p-6 border border-gray-300 rounded-2xl bg-gray-50 shadow-sm">
-      <h3 className="text-xl font-semibold mb-4 text-gray-800">✨ Generated Lesson</h3>
-      <div className="whitespace-pre-wrap text-gray-700 leading-relaxed">
-        {response}
-      </div>
+    <div className="p-4 border rounded shadow">
+      <h2 className="text-lg font-semibold mb-2">Response</h2>
+      <p>{response}</p>
     </div>
   );
 };

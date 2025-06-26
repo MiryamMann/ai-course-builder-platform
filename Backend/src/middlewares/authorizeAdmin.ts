@@ -8,9 +8,9 @@ import { AuthenticatedRequest } from './authenticateJWT';
 ): void => {
   if (!req.user || !req.user.isAdmin) {
     res.status(403).json({ message: 'Access denied. Admins only.' });
-    return; // שימי לב ל-return שמונע הרצה כפולה
+    return; 
   }
-
-  next(); // הכל בסדר, ממשיכים
+  next(); 
+  
 };
 export default authorizeAdmin;
