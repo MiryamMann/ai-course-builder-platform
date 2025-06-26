@@ -1,5 +1,5 @@
 # 🎓 AI Learning Platform – Mini MVP
-![Homepage Screenshot](./public/HomePage.png)
+![Homepage Screenshot](./Public/HomePage.png)
 
 A minimal yet production-grade learning platform driven by AI, built with a **full-stack TypeScript** architecture using Node.js, React, Redux Toolkit, Prisma, and PostgreSQL.  
 Users can explore educational content by category, submit prompts to an AI engine, and track their learning history via a clean dashboard interface.
@@ -75,7 +75,7 @@ The platform uses [`zod`](https://zod.dev) for robust runtime validation with fu
 | DevOps      | GitHub Actions (build + lint)                      |
 | Other Tools | Axios, dotenv, bcrypt, React Router                |
 
-![Architecture](./public/architecture.png)
+![Architecture](./Public/architecture.png)
 
 ---
 
